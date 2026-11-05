@@ -6,5 +6,6 @@
 *.fls
 *.log
 *.run.xml
+*.synctex.gz
 *.pdf
 __pycache__
