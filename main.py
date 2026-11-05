@@ -4,12 +4,18 @@ import yaml
 from PIL import Image
 import numpy as np
 from os import path as opath
+import matplotlib
+
+# Use a non-interactive backend so the script works in CI and headless shells.
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
 from mypylibs import trajectory
 from mypylibs import grayscale
 from mypylibs import filters
 from mypylibs import thresholding
 from mypylibs import edge_detection
-import matplotlib.pyplot as plt
+from mypylibs import fourier
 
 ROOT_IN = 'in'
 ROOT_OUT = 'out'
@@ -67,7 +73,18 @@ def main(case: int):
     plt.close(fig)
 
     # 6. Fourier reconstruction
-    # plt.savefig(opath.join(ROOT_OUT, f'{case:02}_final.{EXT}'))
+    fourier.save_reconstruction_mosaic(
+        x_resampled,
+        y_resampled,
+        opath.join(ROOT_OUT, f'{case:02}_final.{EXT}'),
+    )
+
+    # Bonus: animate the dominant rotating Fourier vectors.
+    fourier.save_epicycle_animation(
+        x_resampled,
+        y_resampled,
+        opath.join(ROOT_OUT, f'{case:02}.mp4'),
+    )
 
 if __name__ == '__main__':
 
