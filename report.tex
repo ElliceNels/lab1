@@ -9,98 +9,77 @@
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage[backend=biber,style=numeric]{biblatex}
-\addbibresource{report.bib} 
+\addbibresource{report.bib}
 
  \graphicspath{{assets/latex/}}
+
+% Renders in red so unfinished sections are obvious. None may remain at submission.
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO:} #1}}
 
 \begin{document}
 
 \title{CS6524 Computer Vision Lab. 1\\ Silhouettes and Fourier Epicycles}
 
-\author{\IEEEauthorblockN{1\textsuperscript{st} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address or ORCID}
+\author{\IEEEauthorblockN{Darragh Luby}
+\IEEEauthorblockA{\textit{University of Limerick}\\
+23359048}
 \and
-\IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address or ORCID}
+\IEEEauthorblockN{Ellice Nelson}
+\IEEEauthorblockA{\textit{University of Limerick}\\
+23371323}
 \and
-\IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address or ORCID}
+\IEEEauthorblockN{Tóla Bowen MacCurtáin}
+\IEEEauthorblockA{\textit{University of Limerick}\\
+23383372}
+\and
+\IEEEauthorblockN{James Kelly}
+\IEEEauthorblockA{\textit{University of Limerick}\\
+23370858}
 }
 
 \maketitle
 
 \begin{abstract}
-Describe in few words the work done, the lessons learned, and results.
+\todo{The work done, the lessons learned, and the results, in a few words.}
 \end{abstract}
 
-\section{Introduction}
-This document contains some examples of basic {\LaTeX} functions.
+\section{Methodology}
 
-\subsection{Lists}
+\subsection{Image Processing Pipeline}
+\todo{Each step from raw image to boundary mask.}
 
-List can be bulleted\dots
-\begin{itemize}
-\item First
-\item Second
-\item Third
-\end{itemize}
+\subsection{Silhouette Trajectory}
+\todo{How edge pixels become an ordered, resampled curve, and any changes to the reference snippet.}
 
-Or enumerated
+\subsection{Fourier Descriptors}
+\todo{The 1D complex signal, the DFT, how the top $K$ harmonics are selected, and the reconstruction.}
 
-\begin{enumerate}
-\item First
-\item Second
-\item Third
-\end{enumerate}
+\section{Justifications}
 
-\subsection{Equations}
+\subsection{Spatial Filters and Kernels}
+\todo{Why these kernels and sizes? What did you try and reject?}
 
-Equations can have their own environment,
-\begin{equation}
-a+b=\gamma\label{eq}
-\end{equation}
-and be reference (Equation~\ref{eq}), or can be inline and blend in the text like this: $\sum_{i=0}^{N}x_i$, like any other word.
+\subsection{Thresholding}
+\todo{How were thresholds chosen? Which images needed their own values, and why?}
 
-\subsection{Figures and Tables}
+\section{Discussion and Failure Analysis}
 
-\begin{table}
-\caption{Table Type Styles}
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-\hline
-\textbf{Table}&\multicolumn{3}{|c|}{\textbf{Table Column Head}} \\
-\cline{2-4} 
-\textbf{Head} & \textbf{\textit{Table column subhead}}& \textbf{\textit{Subhead}}& \textbf{\textit{Subhead}} \\
-\hline
-copy& More table copy$^{\mathrm{a}}$& &  \\
-\hline
-\multicolumn{4}{l}{$^{\mathrm{a}}$Sample of a Table footnote.}
-\end{tabular}
-\label{tab1}
-\end{center}
-\end{table}
+\subsection{Results}
+\todo{Where the pipeline succeeded or failed, per image, with figures from \texttt{out/}.}
 
-\begin{figure}
-% Uncomment the line below to include an image from a source file
-\centerline{\includegraphics{fig1.png}}
-\caption{Example of a figure caption.}
-\label{fig}
-\end{figure}
+\subsection{Improvements}
+\todo{Concrete steps you would take with more time.}
 
-They appear by default on top of the text, and you reference like this: Figure~\ref{fig} and Table~\ref{tab1}.
-
-\subsection{Citations}
-
-If you need to cite external sources, use the \texttt{report.bib} file. As an example, here's how you cite the textbook~\cite{foundationsCVbook}.
+% Figure example: copy the image from out/ into assets/latex/ first.
+% Use figure* to span both columns.
+%
+% \begin{figure}
+% \centerline{\includegraphics[width=\columnwidth]{00_final.png}}
+% \caption{Reconstruction of image 00 with 5\% to 100\% of the harmonics.}
+% \label{fig:final00}
+% \end{figure}
+%
+% Reference it with Figure~\ref{fig:final00}. Cite sources from report.bib with \cite{foundationsCVbook}.
 
 \printbibliography
 
