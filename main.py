@@ -5,6 +5,7 @@ from PIL import Image
 import numpy as np
 from os import path as opath
 from mypylibs import trajectory
+from mypylibs import grayscale
 from mypylibs import thresholding
 import matplotlib.pyplot as plt
 
@@ -18,15 +19,14 @@ def main(case: int):
     with open(opath.join(ROOT_IN, f'{case:02}.yaml')) as f:
         params = yaml.safe_load(f) or {}
     
-    # 1. Convert image to RGB, then to a NumPy array
+    # Convert image to RGB, then to a NumPy array
     rgb = np.array(img.convert("RGB"))
 
-    # 2. Convert RGB image to grayscale
-    gray = (
-        0.299 * rgb[:, :, 0] +
-        0.587 * rgb[:, :, 1] +
-        0.114 * rgb[:, :, 2]
-    )
+    # 1. Convert RGB image to grayscale
+    gray = grayscale.grayscale(rgb)
+
+    # 2. Blur
+
     # 3. Threshold the (later: blurred) grayscale image. Pixels darker than
     # the chosen value become foreground; the per-image YAML can override 240.
     threshold_value = params.get("threshold", 240)
