@@ -2,8 +2,9 @@
 
 ## Team Members
 
-| Full Name | Student ID | GitHub Username |
-|-----------|------------|-----------------|
-| Ellice Nelson | 23371323 | ElliceNels |
-| Tola | 23383372 | Tolabmc |
-| James Kelly | 23370858 | Kelzo8 |
+| Full Name     | Student ID | GitHub Username |
+| ------------- | ---------- | --------------- |
+| Darragh       | 23359048   | darragh0        |
+| Ellice Nelson | 23371323   | ElliceNels      |
+| Tola          | 23383372   | Tolabmc         |
+| James Kelly   | 23370858   | Kelzo8          |
