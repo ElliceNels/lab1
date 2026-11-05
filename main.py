@@ -57,8 +57,16 @@ def main(case: int):
     fig.tight_layout()
     fig.savefig(opath.join(ROOT_OUT, f'{case:02}_transforms.{EXT}'), bbox_inches="tight")
     plt.close(fig)
-    # Expected outputs per case
-    # plt.savefig(opath.join(ROOT_OUT, f'{case:02}_trajectory.{EXT}'))
+
+    # 5. Calculate the ordered and resampled trajectory
+    x_resampled, y_resampled = trajectory.calculate(edges)
+    fig = trajectory.plot_trajectory(x_resampled, y_resampled)
+
+    # Save the trajectory mosaic
+    fig.savefig(opath.join(ROOT_OUT, f'{case:02}_trajectory.{EXT}'))
+    plt.close(fig)
+
+    # 6. Fourier reconstruction
     # plt.savefig(opath.join(ROOT_OUT, f'{case:02}_final.{EXT}'))
 
 if __name__ == '__main__':

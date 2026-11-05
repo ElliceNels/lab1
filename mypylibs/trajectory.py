@@ -1,5 +1,6 @@
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 def calculate(img, num_samples=500):
 
@@ -26,3 +27,29 @@ def calculate(img, num_samples=500):
     y_resampled = np.interp(target_dists, cumulative_dist, ordered_pts[:, 1]).astype(int)
 
     return x_resampled, y_resampled
+
+def plot_trajectory(x, y):
+    fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+    axes = axes.flatten()
+
+    total_points = len(x)
+
+    for i, ax in enumerate(axes):
+        percentage = (i + 1) * 10
+        num_points = max(1, int(total_points * percentage / 100))
+
+        ax.plot(
+            x[:num_points],
+            y[:num_points],
+            color="blue",
+            linewidth=1.5
+        )
+
+        ax.set_title(f"{percentage}% Complete")
+        ax.set_xlim(min(x) - 10, max(x) + 10)
+        ax.set_ylim(max(y) + 10, min(y) - 10)
+        ax.set_aspect("equal")
+        ax.axis("off")
+
+    fig.tight_layout()
+    return fig
