@@ -5,5 +5,5 @@
 | Full Name | Student ID | GitHub Username |
 |-----------|------------|-----------------|
 | Ellice Nelson | 23371323 | ElliceNels |
-| Tola |  |  |
+| Tola | 23383372 | Tolabmc |
 | James Kelly |  |  |
