@@ -46,7 +46,28 @@
 \section{Methodology}
 
 \subsection{Image Processing Pipeline}
-\todo{Each step from raw image to boundary mask.}
+We first retrieved one generic stock image for six distinct objects, viz. a sports shoe (trainer), a blue mug, a red apple, a banana, a pear, and a puppy. We saved the original images as PNGs alongside their YAML configuration files—used to optionally specify sigma and threshold values.
+
+Our image processing pipeline processes each image in turn. We convert the image to grayscale by aggregating the RGB values into one intensity channel, luma ($Y'$), using the standard ITU-R BT.601 luminance weights~\cite{bt601}:
+\begin{equation}
+Y' = 0.299R' + 0.587G' + 0.114B'
+\end{equation}
+
+We use Gaussian blur to remove texture and noise before thresholding \eqref{eq:gaussian}. The kernel is built by hand and applied by convolution with reflected borders. Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim99.7\%$ of the Gaussian's weight. The per-image YAML can optionally override the default sigma value of $2$.
+\begin{equation}
+G(x,y) = \frac{1}{W}\exp\!\left(-\frac{x^2+y^2}{2\sigma^2}\right),
+\quad |x|,|y| \le \lceil 3\sigma \rceil
+\label{eq:gaussian}
+\end{equation}
+where $W$ is the sum of all kernel values, so the kernel sums to 1 and blurring does not change the image's overall brightness.
+
+After this, we threshold the blurred grayscale image. Pixels darker than $T$ become foreground (value 1) and the rest background (value 0), with $T$ defaulting to $240$—overrideable by the image's corresponding YAML file. Edge detection runs on the threshold mask: a pixel is marked as an edge if its value differs from the next pixel horizontally or vertically, leaving a 2-pixel-wide outline of the silhouette. Fig.~\ref{fig:transforms} shows each stage for image 00 (trainer).
+
+\begin{figure}
+\centerline{\includegraphics[width=\columnwidth]{00_transforms.png}}
+\caption{Pipeline stages for image 00.}
+\label{fig:transforms}
+\end{figure}
 
 \subsection{Silhouette Trajectory}
 \todo{How edge pixels become an ordered, resampled curve, and any changes to the reference snippet.}
