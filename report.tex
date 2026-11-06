@@ -74,7 +74,19 @@ After this, we threshold the blurred grayscale image. Pixels darker than $T$ bec
 For our silhouette trajectory calculation, we use the reference snippet provided with the lab. We input the edge pixels from Section~\ref{sec:pipeline}, collected as a list of $(x, y)$ points. Ordering follows a greedy nearest-neighbour approach: start at the first edge pixel (top-left), jump to the nearest unvisited pixel (straight-line distance); repeat until none remain. We then resample because the Fourier step needs a fixed number of evenly spaced samples, so the outline is traced at a steady speed. We measure the distance travelled along the ordered points, then pick 500 points evenly spaced along that length with linear interpolation. Resampled coordinates are also rounded to whole pixels.
 
 \subsection{Fourier Descriptors}
-\todo{The 1D complex signal, the DFT, how the top $K$ harmonics are selected, and the reconstruction.}
+We translate the 2D outline into a single 1D signal by turning each of the 500 points into one complex number, $z[n] = x[n] + i\,y[n]$. We compute the DFT using NumPy's Fast Fourier Transform (FFT), dividing by $N$ so $|c_k|$ is the radius of its circle:
+\begin{equation}
+c_k = \frac{1}{N}\sum_{n=0}^{N-1} z[n]\, e^{-2\pi i k n / N}
+\end{equation}
+where $N = 500$ and each $c_k$ is a circle (epicycle) that spins $k$ times per lap.
+
+For each epicycle, its direction is the sign of $k$. We sort by size and keep the biggest $K$, for 5\% to 100\% in steps of 5\%. This gives the 20 panels shown in Fig.~\ref{fig:final}. We add the circles that we kept back together in order to draw the outline. The shape is vaguely recognizable at 5\% but matches the resampled trajectory exactly at 100\%. For each image, we use Matplotlib's animation tools (\texttt{FuncAnimation}, \texttt{FFMpegWriter}) to create and save an MP4 animating the 40 largest epicycles drawing the outline.
+
+\begin{figure}
+\centerline{\includegraphics[width=\columnwidth]{00_final.png}}
+\caption{Reconstruction of image 00 with 5\% to 100\% of the harmonics.}
+\label{fig:final}
+\end{figure}
 
 \section{Justifications}
 
