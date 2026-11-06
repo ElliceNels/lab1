@@ -46,6 +46,7 @@
 \section{Methodology}
 
 \subsection{Image Processing Pipeline}
+\label{sec:pipeline}
 We first retrieved one generic stock image for six distinct objects, viz. a sports shoe (trainer), a blue mug, a red apple, a banana, a pear, and a puppy. We saved the original images as PNGs alongside their YAML configuration files—used to optionally specify sigma and threshold values.
 
 Our image processing pipeline processes each image in turn. We convert the image to grayscale by aggregating the RGB values into one intensity channel, luma ($Y'$), using the standard ITU-R BT.601 luminance weights~\cite{bt601}:
@@ -70,7 +71,7 @@ After this, we threshold the blurred grayscale image. Pixels darker than $T$ bec
 \end{figure}
 
 \subsection{Silhouette Trajectory}
-\todo{How edge pixels become an ordered, resampled curve, and any changes to the reference snippet.}
+For our silhouette trajectory calculation, we use the reference snippet provided with the lab. We input the edge pixels from Section~\ref{sec:pipeline}, collected as a list of $(x, y)$ points. Ordering follows a greedy nearest-neighbour approach: start at the first edge pixel (top-left), jump to the nearest unvisited pixel (straight-line distance); repeat until none remain. We then resample because the Fourier step needs a fixed number of evenly spaced samples, so the outline is traced at a steady speed. We measure the distance travelled along the ordered points, then pick 500 points evenly spaced along that length with linear interpolation. Resampled coordinates are also rounded to whole pixels.
 
 \subsection{Fourier Descriptors}
 \todo{The 1D complex signal, the DFT, how the top $K$ harmonics are selected, and the reconstruction.}
