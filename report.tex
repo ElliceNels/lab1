@@ -60,7 +60,7 @@ We convert the image to greyscale by aggregating the RGB values into one intensi
   Y' = 0.299R' + 0.587G' + 0.114B'
 \end{equation}
 
-We use Gaussian blur~\cite{foundationsCVbook} \eqref{eq:gaussian} to remove texture and noise before thresholding.
+We use Gaussian blur~\cite{foundationsCVbook} to remove texture and noise before thresholding, using the kernel in \eqref{eq:gaussian}.
 The kernel is built by hand and applied by convolution with reflected borders.
 Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim$99.7\% of the Gaussian's weight.
 The per-image YAML can optionally override the default $\sigma=2$.
