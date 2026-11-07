@@ -105,7 +105,7 @@ M(x,y) = \begin{cases} 1 & \text{if } I(x,y) < T \\ 0 & \text{otherwise} \end{ca
 \end{equation}
 where $I$ is the blurred image and $M$ is the mask.
 
-From trial-and-error, we chose a default $T=240$ since most image backgrounds are white or near-white. For image 00, we dropped to $T=232$ because at 240 its off-white background leaked into the mask. For image 04, we found we needed $T=200$ and $\sigma=6$ together to remove the stock-photo watermark sufficiently. A lower value for $T$, however, runs the risk of cutting off light parts of the object. A single global value for $T$ failed for images where shadows are as dark as the object, as with the shadows on image 02 and 03, and with the entirety of image 05.
+From trial-and-error, we chose a default $T=240$ since most image backgrounds are white or near-white. For image 00, we dropped to $T=232$ because at 240 its off-white background leaked into the mask. For image 04, we found we needed $T=200$ and $\sigma=6$ together to remove the stock-photo watermark sufficiently. A lower value for $T$, however, runs the risk of cutting off light parts of the object. A single global value for $T$ failed for images where shadows are as dark as the object, as with the shadows on images 02 and 03, and with the entirety of image 05.
 
 \section{Discussion and Failure Analysis}
 
@@ -114,7 +114,7 @@ From trial-and-error, we chose a default $T=240$ since most image backgrounds ar
 The key failure affecting every one of our images is straight jump lines: each trajectory has one or more long lines transecting the shape, as shown in Fig.~\ref{fig:pear}. We found the cause to be the 2-pixel wide edge. The nearest-neighbour path traverses the shape using one layer, then has to abruptly jump across the shape to collect the leftover pixels from the other layer. The Fourier step treats that jump as part of the outline, so the line appears in every reconstruction (Fig.~\ref{fig:final}). Separately, per-image results varied:
 
 \begin{itemize}
-    \item 00 (trainer): a clear, discernible outline; though only with $\sigma=5$ and $T=232$.
+    \item 00 (trainer): a clear, discernible outline, though only with $\sigma=5$ and $T=232$.
     \item 01 (mug): the handle has a hole, so there is both an inner and outer outline. The path must jump between the inner and outer outlines.
     \item 02 (apple), 03 (banana): bottom cast shadows are included in the silhouettes.
     \item 04 (pear): the clearest mask since there is no shadow included in the silhouette.
@@ -129,9 +129,14 @@ At 5\% of the harmonics, every shape is a coarse, vague blob. Most shapes are re
 \label{fig:pear}
 \end{figure}
 
-
 \subsection{Improvements}
-\todo{Concrete steps you would take with more time.}
+In our code, when an object pixel neighbours a background pixel, both are marked as an edge, giving two rows of edge pixels (one inside the object and one outside it). Marking only the foreground pixel at each transition would give a 1-pixel-wide boundary, which would remove the leftover layer causing the jump lines.
+
+The mug (image 01) has two outlines, outside and around the handle hole; epicycles can only draw one continuous line, so the line jumps between outlines. We would fix this by either 1) keeping only the outer outline, or 2) drawing each outline with its own epicycles.
+
+To alleviate the shadow issue for image 02 and 03, and to separate the puppy from the background, we would use colour instead of just using brightness: shadows are gray while the fruit is vibrant, and the puppy is ginger while the ground is beige.
+
+Instead of hand-tuning the threshold $T$ per image where the default fails, we would derive the best value for $T$ automatically using Otsu's method~\cite{otsu}, which chooses the cutoff that best splits the image into two groups: dark (object) and light (background).
 
 % Figure example: copy the image from out/ into assets/latex/ first.
 % Use figure* to span both columns.
