@@ -54,7 +54,7 @@ Our image processing pipeline processes each image in turn. We convert the image
 Y' = 0.299R' + 0.587G' + 0.114B'
 \end{equation}
 
-We use Gaussian blur to remove texture and noise before thresholding \eqref{eq:gaussian}. The kernel is built by hand and applied by convolution with reflected borders. Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim99.7\%$ of the Gaussian's weight. The per-image YAML can optionally override the default sigma value of $2$.
+We use Gaussian blur to remove texture and noise before thresholding \eqref{eq:gaussian}. The kernel is built by hand and applied by convolution with reflected borders. Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim$99.7\% of the Gaussian's weight. The per-image YAML can optionally override the default sigma value of $2$.
 \begin{equation}
 G(x,y) = \frac{1}{W}\exp\!\left(-\frac{x^2+y^2}{2\sigma^2}\right),
 \quad |x|,|y| \le \lceil 3\sigma \rceil
@@ -107,13 +107,28 @@ where $I$ is the blurred image and $M$ is the mask.
 
 From trial-and-error, we chose a default $T=240$ since most image backgrounds are white or near-white. For image 00, we dropped to $T=232$ because at 240 its off-white background leaked into the mask. For image 04, we found we needed $T=200$ and $\sigma=6$ together to remove the stock-photo watermark sufficiently. A lower value for $T$, however, runs the risk of cutting off light parts of the object. A single global value for $T$ failed for images where shadows are as dark as the object, as with the shadows on image 02 and 03, and with the entirety of image 05.
 
-
 \section{Discussion and Failure Analysis}
 
-\todo{Mention dog -> The puppy is about as bright as the ground, and its white fur is even brighter. No single T separates them}
-
 \subsection{Results}
-\todo{Where the pipeline succeeded or failed, per image, with figures from \texttt{out/}.}
+
+The key failure affecting every one of our images is straight jump lines: each trajectory has one or more long lines transecting the shape, as shown in Fig.~\ref{fig:pear}. We found the cause to be the 2-pixel wide edge. The nearest-neighbour path traverses the shape using one layer, then has to abruptly jump across the shape to collect the leftover pixels from the other layer. The Fourier step treats that jump as part of the outline, so the line appears in every reconstruction (Fig.~\ref{fig:final}). Separately, per-image results varied:
+
+\begin{itemize}
+    \item 00 (trainer): a clear, discernible outline; though only with $\sigma=5$ and $T=232$.
+    \item 01 (mug): the handle has a hole, so there is both an inner and outer outline. The path must jump between the inner and outer outlines.
+    \item 02 (apple), 03 (banana): bottom cast shadows are included in the silhouettes.
+    \item 04 (pear): the clearest mask since there is no shadow included in the silhouette.
+    \item 05 (puppy): unrecognizable failure. The grey background is approximately as dark as the dog, and its white fur is even brighter, meaning no outline can be found.
+\end{itemize}
+
+At 5\% of the harmonics, every shape is a coarse, vague blob. Most shapes are recognizable at $\sim$30\% and fine-grained at higher percentages.
+
+\begin{figure}
+\centerline{\includegraphics[width=\columnwidth]{04_trajectory.png}}
+\caption{Trajectory of image 04 (depicting a pear) traced from 10\% to 100\%.}
+\label{fig:pear}
+\end{figure}
+
 
 \subsection{Improvements}
 \todo{Concrete steps you would take with more time.}
