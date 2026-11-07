@@ -40,21 +40,21 @@
 \maketitle
 
 \begin{abstract}
-\todo{The work done, the lessons learned, and the results, in a few words.}
+We present a multi-stage pipeline that turns six single-subject images into silhouette outlines and redraws them with Fourier epicycles. The pipeline has four main steps: greyscaling, blurring, thresholding, and edge-detection. We then order the edge pixels into a path. We use the DFT and keep the largest harmonics. Shapes are somewhat recognisable at $\sim$30\% of harmonics, but every trajectory has jump lines attributable to 2-pixel edges. Shadows and grey-ish backgrounds also cause failures. We conclude with our learnings: thresholding with brightness alone is insufficient, and accounting for colour and automatic thresholds would help.
 \end{abstract}
 
 \section{Methodology}
 
 \subsection{Image Processing Pipeline}
 \label{sec:pipeline}
-We first retrieved one generic stock image for six distinct objects, viz. a sports shoe (trainer), a blue mug, a red apple, a banana, a pear, and a puppy. We saved the original images as PNGs alongside their YAML configuration files—used to optionally specify sigma and threshold values.
+We first retrieved one generic stock image for six distinct objects, viz. a sports shoe (trainer), a blue mug, a red apple, a banana, a pear, and a puppy. We saved the original images as PNGs alongside their YAML configuration files—used to optionally specify sigma ($\sigma$) and threshold ($T$) values.
 
-Our image processing pipeline processes each image in turn. We convert the image to grayscale by aggregating the RGB values into one intensity channel, luma ($Y'$), using the standard ITU-R BT.601 luminance weights~\cite{bt601}:
+Our image processing pipeline processes each image in turn. We convert the image to greyscale by aggregating the RGB values into one intensity channel, luma ($Y'$), using the standard ITU-R BT.601 luminance weights~\cite{bt601}:
 \begin{equation}
 Y' = 0.299R' + 0.587G' + 0.114B'
 \end{equation}
 
-We use Gaussian blur to remove texture and noise before thresholding \eqref{eq:gaussian}. The kernel is built by hand and applied by convolution with reflected borders. Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim$99.7\% of the Gaussian's weight. The per-image YAML can optionally override the default sigma value of $2$.
+We use Gaussian blur to remove texture and noise before thresholding \eqref{eq:gaussian}. The kernel is built by hand and applied by convolution with reflected borders. Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim$99.7\% of the Gaussian's weight. The per-image YAML can optionally override the default $\sigma=2$.
 \begin{equation}
 G(x,y) = \frac{1}{W}\exp\!\left(-\frac{x^2+y^2}{2\sigma^2}\right),
 \quad |x|,|y| \le \lceil 3\sigma \rceil
@@ -62,7 +62,7 @@ G(x,y) = \frac{1}{W}\exp\!\left(-\frac{x^2+y^2}{2\sigma^2}\right),
 \end{equation}
 where $W$ is the sum of all kernel values, so the kernel sums to 1 and blurring does not change the image's overall brightness.
 
-After this, we threshold the blurred grayscale image. Pixels darker than $T$ become foreground (value 1) and the rest background (value 0), with $T$ defaulting to $240$—overrideable by the image's corresponding YAML file. Edge detection runs on the threshold mask: a pixel is marked as an edge if its value differs from the next pixel horizontally or vertically, leaving a 2-pixel-wide outline of the silhouette. Fig.~\ref{fig:transforms} shows each stage for image 00 (trainer).
+After this, we threshold the blurred greyscale image. Pixels darker than $T$ become foreground (value 1) and the rest background (value 0), with $T$ defaulting to $240$—overrideable by the image's corresponding YAML file. Edge detection runs on the threshold mask: a pixel is marked as an edge if its value differs from the next pixel horizontally or vertically, leaving a 2-pixel-wide outline of the silhouette. Fig.~\ref{fig:transforms} shows each stage for image 00 (trainer).
 
 \begin{figure}
 \centerline{\includegraphics[width=\columnwidth]{00_transforms.png}}
@@ -80,7 +80,7 @@ c_k = \frac{1}{N}\sum_{n=0}^{N-1} z[n]\, e^{-2\pi i k n / N}
 \end{equation}
 where $N = 500$ and each $c_k$ is a circle (epicycle) that spins $k$ times per lap.
 
-For each epicycle, its direction is the sign of $k$. We sort by size and keep the biggest $K$, for 5\% to 100\% in steps of 5\%. This gives the 20 panels shown in Fig.~\ref{fig:final}. We add the circles that we kept back together in order to draw the outline. The shape is vaguely recognizable at 5\% but matches the resampled trajectory exactly at 100\%. For each image, we use Matplotlib's animation tools (\texttt{FuncAnimation}, \texttt{FFMpegWriter}) to create and save an MP4 animating the 40 largest epicycles drawing the outline.
+For each epicycle, its direction is the sign of $k$. We sort by size and keep the biggest $K$, for 5\% to 100\% in steps of 5\%. This gives the 20 panels shown in Fig.~\ref{fig:final}. We add the circles that we kept back together in order to draw the outline. The shape is vaguely recognisable at 5\% but matches the resampled trajectory exactly at 100\%. For each image, we use Matplotlib's animation tools (\texttt{FuncAnimation}, \texttt{FFMpegWriter}) to create and save an MP4 animating the 40 largest epicycles drawing the outline.
 
 \begin{figure}
 \centerline{\includegraphics[width=\columnwidth]{00_final.png}}
@@ -91,7 +91,7 @@ For each epicycle, its direction is the sign of $k$. We sort by size and keep th
 \section{Justifications}
 
 \subsection{Spatial Filters and Kernels}
-We apply a blur filter to each image for background attenuation: to minimize background noise and texture before thresholding. We use the Gaussian blur technique since it gives more weight to nearby pixels than far ones, which dims background noise but keeps the outline sharper than a simple average, which is better for our case. From brief trial-and-error, we settled on a default of $\sigma=2$ as this was the minimum value that highlighted one clear subject for most of the images. Image 00 required $\sigma=5$ and image 04 required $\sigma=6$, since, otherwise, those images broke into separate pieces (at $\sigma=2$, 866 and 5 pieces respectively). We use the smallest value we could since higher values for $\sigma$ meant more blur and thus less-detailed, rounded corners.
+We apply a blur filter to each image for background attenuation: to minimise background noise and texture before thresholding. We use the Gaussian blur technique since it gives more weight to nearby pixels than far ones, which dims background noise but keeps the outline sharper than a simple average, which is better for our case. From brief trial-and-error, we settled on a default of $\sigma=2$ as this was the minimum value that highlighted one clear subject for most of the images. Image 00 required $\sigma=5$ and image 04 required $\sigma=6$, since, otherwise, those images broke into separate pieces (at $\sigma=2$, 866 and 5 pieces respectively). We use the smallest value we could since higher values for $\sigma$ meant more blur and thus less-detailed, rounded corners.
 
 As mentioned in Section~\ref{sec:pipeline}, we use $\lceil3\sigma\rceil$ for the kernel radius since this covers $\sim99.7\%$ of the bell curve, which is sufficient. Accounting for more of the curve would add unnecessary computation for little gain.
 
@@ -118,10 +118,10 @@ The key failure affecting every one of our images is straight jump lines: each t
     \item 01 (mug): the handle has a hole, so there is both an inner and outer outline. The path must jump between the inner and outer outlines.
     \item 02 (apple), 03 (banana): bottom cast shadows are included in the silhouettes.
     \item 04 (pear): the clearest mask since there is no shadow included in the silhouette.
-    \item 05 (puppy): unrecognizable failure. The grey background is approximately as dark as the dog, and its white fur is even brighter, meaning no outline can be found.
+    \item 05 (puppy): unrecognisable failure. The grey background is approximately as dark as the dog, and its white fur is even brighter, meaning no outline can be found.
 \end{itemize}
 
-At 5\% of the harmonics, every shape is a coarse, vague blob. Most shapes are recognizable at $\sim$30\% and fine-grained at higher percentages.
+At 5\% of the harmonics, every shape is a coarse, vague blob. Most shapes are recognisable at $\sim$30\% and fine-grained at higher percentages.
 
 \begin{figure}
 \centerline{\includegraphics[width=\columnwidth]{04_trajectory.png}}
@@ -134,20 +134,9 @@ In our code, when an object pixel neighbours a background pixel, both are marked
 
 The mug (image 01) has two outlines, outside and around the handle hole; epicycles can only draw one continuous line, so the line jumps between outlines. We would fix this by either 1) keeping only the outer outline, or 2) drawing each outline with its own epicycles.
 
-To alleviate the shadow issue for image 02 and 03, and to separate the puppy from the background, we would use colour instead of just using brightness: shadows are gray while the fruit is vibrant, and the puppy is ginger while the ground is beige.
+To alleviate the shadow issue for images 02 and 03, and to separate the puppy from the background, we would use colour instead of just using brightness: shadows are grey while the fruit is vibrant, and the puppy is ginger while the ground is beige.
 
-Instead of hand-tuning the threshold $T$ per image where the default fails, we would derive the best value for $T$ automatically using Otsu's method~\cite{otsu}, which chooses the cutoff that best splits the image into two groups: dark (object) and light (background).
-
-% Figure example: copy the image from out/ into assets/latex/ first.
-% Use figure* to span both columns.
-%
-% \begin{figure}
-% \centerline{\includegraphics[width=\columnwidth]{00_final.png}}
-% \caption{Reconstruction of image 00 with 5\% to 100\% of the harmonics.}
-% \label{fig:final00}
-% \end{figure}
-%
-% Reference it with Figure~\ref{fig:final00}. Cite sources from report.bib with \cite{foundationsCVbook}.
+Instead of hand-tuning $T$ per image where the default fails, we would derive the best value for $T$ automatically using Otsu's method~\cite{otsu}, which chooses the cutoff that best splits the image into two groups: dark (object) and light (background).
 
 \printbibliography
 
