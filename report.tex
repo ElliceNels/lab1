@@ -60,7 +60,7 @@ We convert the image to greyscale by aggregating the RGB values into one intensi
   Y' = 0.299R' + 0.587G' + 0.114B'
 \end{equation}
 
-We use Gaussian blur \eqref{eq:gaussian} to remove texture and noise before thresholding.
+We use Gaussian blur~\cite{foundationsCVbook} \eqref{eq:gaussian} to remove texture and noise before thresholding.
 The kernel is built by hand and applied by convolution with reflected borders.
 Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim$99.7\% of the Gaussian's weight.
 The per-image YAML can optionally override the default $\sigma=2$.
@@ -92,7 +92,7 @@ Resampled coordinates are also rounded to whole pixels.
 
 \subsection{Fourier Descriptors}
 We translate the 2D outline into a single 1D signal by turning each of the 500 points into one complex number, $z[n] = x[n] + i\,y[n]$.
-We compute the DFT using NumPy's Fast Fourier Transform (FFT), dividing by $N$ so $|c_k|$ is the radius of its circle:
+We compute the DFT~\cite{foundationsCVbook} using NumPy's Fast Fourier Transform (FFT), dividing by $N$ so $|c_k|$ is the radius of its circle:
 \begin{equation}
   c_k = \frac{1}{N}\sum_{n=0}^{N-1} z[n]\, e^{-2\pi i k n / N}
 \end{equation}
