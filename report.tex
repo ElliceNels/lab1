@@ -98,7 +98,15 @@ As mentioned in Section~\ref{sec:pipeline}, we use $\lceil3\sigma\rceil$ for the
 After thresholding, we run edge detection on the resulting mask. We use a $[-1, 1]$ difference kernel since said mask only contains black and white pixels, meaning any change between neighbouring pixels is an edge; a more complex edge filter (e.g., Sobel) is therefore unneeded.
 
 \subsection{Thresholding}
-\todo{How were thresholds chosen? Which images needed their own values, and why?}
+
+Each pixel of the blurred image is classified as:
+\begin{equation}
+M(x,y) = \begin{cases} 1 & \text{if } I(x,y) < T \\ 0 & \text{otherwise} \end{cases}
+\end{equation}
+where $I$ is the blurred image and $M$ is the mask.
+
+From trial-and-error, we chose a default $T=240$ since most image backgrounds are white or near-white. For image 00, we dropped to $T=232$ because at 240 its off-white background leaked into the mask. For image 04, we found we needed $T=200$ and $\sigma=6$ together to remove the stock-photo watermark sufficiently. A lower value for $T$, however, runs the risk of cutting off light parts of the object. A single global value for $T$ failed for images where shadows are as dark as the object, as with the shadows on image 02 and 03, and with the entirety of image 05.
+
 
 \section{Discussion and Failure Analysis}
 
