@@ -1,106 +1,198 @@
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
-% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
-%Template version as of 6/27/2024
 
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
-\usepackage[backend=biber,style=numeric]{biblatex}
-\addbibresource{report.bib} 
+\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+\addbibresource{report.bib}
 
- \graphicspath{{assets/latex/}}
+\graphicspath{{assets/latex/}}
+
+% Renders in red so unfinished sections are obvious. None may remain at submission.
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO:} #1}}
 
 \begin{document}
 
 \title{CS6524 Computer Vision Lab. 1\\ Silhouettes and Fourier Epicycles}
 
-\author{\IEEEauthorblockN{1\textsuperscript{st} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address or ORCID}
-\and
-\IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address or ORCID}
-\and
-\IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address or ORCID}
+\author{\IEEEauthorblockN{Darragh Luby}
+  \IEEEauthorblockA{\textit{University of Limerick}\\
+  23359048}
+  \and
+  \IEEEauthorblockN{Ellice Nelson}
+  \IEEEauthorblockA{\textit{University of Limerick}\\
+  23371323}
+  \and
+  \IEEEauthorblockN{Tóla Bowen MacCurtáin}
+  \IEEEauthorblockA{\textit{University of Limerick}\\
+  23383372}
+  \and
+  \IEEEauthorblockN{James Kelly}
+  \IEEEauthorblockA{\textit{University of Limerick}\\
+  23370858}
 }
 
 \maketitle
 
 \begin{abstract}
-Describe in few words the work done, the lessons learned, and results.
+  We present a multi-stage pipeline that turns six single-subject images into silhouette outlines and redraws them with Fourier epicycles.
+  The pipeline has four main steps: greyscaling, blurring, thresholding, and edge detection.
+  We then order the edge pixels into a path.
+  We use the DFT and keep the largest harmonics.
+  Shapes are somewhat recognisable at $\sim$30\% of harmonics, but every trajectory has jump lines attributable to 2-pixel edges.
+  Shadows and grey-ish backgrounds also cause failures.
+  We conclude with our learnings: thresholding with brightness alone is insufficient, and accounting for colour and automatic thresholds would help.
 \end{abstract}
 
-\section{Introduction}
-This document contains some examples of basic {\LaTeX} functions.
+\section{Methodology}
 
-\subsection{Lists}
+\subsection{Image Processing Pipeline}
+\label{sec:pipeline}
+We first retrieved one generic stock image for six distinct objects, viz. a sports shoe (trainer), a blue mug, a red apple, a banana, a pear, and a puppy.
+We saved the original images as PNGs alongside their YAML configuration files—used to optionally specify sigma ($\sigma$) and threshold ($T$) values.
 
-List can be bulleted\dots
-\begin{itemize}
-\item First
-\item Second
-\item Third
-\end{itemize}
-
-Or enumerated
-
-\begin{enumerate}
-\item First
-\item Second
-\item Third
-\end{enumerate}
-
-\subsection{Equations}
-
-Equations can have their own environment,
+Our image processing pipeline processes each image in turn.
+We convert the image to greyscale by aggregating the RGB values into one intensity channel, luma ($Y'$), using the standard ITU-R BT.601 luminance weights~\cite{bt601}:
 \begin{equation}
-a+b=\gamma\label{eq}
+  Y' = 0.299R' + 0.587G' + 0.114B'
 \end{equation}
-and be reference (Equation~\ref{eq}), or can be inline and blend in the text like this: $\sum_{i=0}^{N}x_i$, like any other word.
 
-\subsection{Figures and Tables}
+We use Gaussian blur~\cite{foundationsCVbook} to remove texture and noise before thresholding, using the kernel in \eqref{eq:gaussian}.
+The kernel is built by hand and applied by convolution with reflected borders.
+Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim$99.7\% of the Gaussian's weight.
+The per-image YAML can optionally override the default $\sigma=2$.
+\begin{equation}
+  G(x,y) = \frac{1}{W}\exp\!\left(-\frac{x^2+y^2}{2\sigma^2}\right),
+  \quad |x|,|y| \le \lceil 3\sigma \rceil
+  \label{eq:gaussian}
+\end{equation}
+where $W$ is the sum of all kernel values, so the kernel sums to 1 and blurring does not change the image's overall brightness.
 
-\begin{table}
-\caption{Table Type Styles}
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-\hline
-\textbf{Table}&\multicolumn{3}{|c|}{\textbf{Table Column Head}} \\
-\cline{2-4} 
-\textbf{Head} & \textbf{\textit{Table column subhead}}& \textbf{\textit{Subhead}}& \textbf{\textit{Subhead}} \\
-\hline
-copy& More table copy$^{\mathrm{a}}$& &  \\
-\hline
-\multicolumn{4}{l}{$^{\mathrm{a}}$Sample of a Table footnote.}
-\end{tabular}
-\label{tab1}
-\end{center}
-\end{table}
+After this, we threshold the blurred greyscale image.
+Pixels darker than $T$ become foreground (value 1) and the rest background (value 0), with $T$ defaulting to $240$—overridable by the image's corresponding YAML file.
+Edge detection runs on the threshold mask: a pixel is marked as an edge if its value differs from the next pixel horizontally or vertically, leaving a 2-pixel-wide outline of the silhouette.
+Fig.~\ref{fig:transforms} shows each stage for image 00 (trainer).
 
 \begin{figure}
-% Uncomment the line below to include an image from a source file
-\centerline{\includegraphics{fig1.png}}
-\caption{Example of a figure caption.}
-\label{fig}
+  \centerline{\includegraphics[width=\columnwidth]{00_transforms.png}}
+  \caption{Pipeline stages for image 00.}
+  \label{fig:transforms}
 \end{figure}
 
-They appear by default on top of the text, and you reference like this: Figure~\ref{fig} and Table~\ref{tab1}.
+\subsection{Silhouette Trajectory}
+For our silhouette trajectory calculation, we use the reference snippet provided with the lab.
+We input the edge pixels from Section~\ref{sec:pipeline}, collected as a list of $(x, y)$ points.
+Ordering follows a greedy nearest-neighbour approach: start at the first edge pixel (top-left), jump to the nearest unvisited pixel (straight-line distance); repeat until none remain.
+We then resample because the Fourier step needs a fixed number of evenly spaced samples, so the outline is traced at a steady speed.
+We measure the distance travelled along the ordered points, then pick 500 points evenly spaced along that length with linear interpolation.
+Resampled coordinates are also rounded to whole pixels.
 
-\subsection{Citations}
+\subsection{Fourier Descriptors}
+We translate the 2D outline into a single 1D signal by turning each of the 500 points into one complex number, $z[n] = x[n] + i\,y[n]$.
+We compute the DFT~\cite{foundationsCVbook} using NumPy's Fast Fourier Transform (FFT), dividing by $N$ so $|c_k|$ is the radius of its circle:
+\begin{equation}
+  c_k = \frac{1}{N}\sum_{n=0}^{N-1} z[n]\, e^{-2\pi i k n / N}
+\end{equation}
+where $N = 500$ and each $c_k$ is a circle (epicycle) that spins $k$ times per lap.
 
-If you need to cite external sources, use the \texttt{report.bib} file. As an example, here's how you cite the textbook~\cite{foundationsCVbook}.
+For each epicycle, its direction is the sign of $k$.
+We sort by size and keep the biggest $K$, for 5\% to 100\% in steps of 5\%.
+This gives the 20 panels shown in Fig.~\ref{fig:final}.
+We then add the selected circles back together to draw the outline.
+The shape is vaguely recognisable at 5\% but matches the resampled trajectory exactly at 100\%.
+For each image, we use Matplotlib's animation tools (\texttt{FuncAnimation}, \texttt{FFMpegWriter}) to create and save an MP4 animating the 40 largest epicycles drawing the outline.
+
+\begin{figure}
+  \centerline{\includegraphics[width=\columnwidth]{00_final.png}}
+  \caption{Reconstruction of image 00 with 5\% to 100\% of the harmonics.}
+  \label{fig:final}
+\end{figure}
+
+\section{Justifications}
+
+\subsection{Spatial Filters and Kernels}
+We apply a blur filter to each image for background attenuation: to minimise background noise and texture before thresholding.
+We use the Gaussian blur technique since it gives more weight to nearby pixels than far ones, which dims background noise but keeps the outline sharper than a simple average.
+Through brief trial and error, we settled on a default of $\sigma=2$ as this was the minimum value that highlighted one clear subject for most of the images.
+Image 00 required $\sigma=5$ and image 04 required $\sigma=6$, since, otherwise, those images broke into separate pieces (at $\sigma=2$, 866 and 5 pieces respectively).
+We use the smallest value we could since higher values for $\sigma$ meant more blur and thus less-detailed, rounded corners.
+
+As mentioned in Section~\ref{sec:pipeline}, we use $\lceil3\sigma\rceil$ for the kernel radius since this covers $\sim99.7\%$ of the bell curve, which is sufficient.
+Accounting for more of the curve would add unnecessary computation for little gain.
+
+After thresholding, we run edge detection on the resulting mask.
+We use a $[-1, 1]$ difference kernel since said mask only contains black and white pixels, meaning any change between neighbouring pixels is an edge; a more complex edge filter (e.g., Sobel) is therefore unneeded.
+
+\subsection{Thresholding}
+
+Each pixel of the blurred image is classified as:
+\begin{equation}
+  M(x,y) =
+  \begin{cases} 1 & \text{if } I(x,y) < T \\ 0 & \text{otherwise}
+  \end{cases}
+\end{equation}
+where $I$ is the blurred image and $M$ is the mask.
+
+Through trial and error, we chose a default $T=240$ since most image backgrounds are white or near-white.
+For image 00, we dropped to $T=232$ because at 240 its off-white background leaked into the mask.
+For image 04, we found we needed $T=200$ and $\sigma=6$ together to remove the stock-photo watermark sufficiently.
+A lower value for $T$, however, runs the risk of cutting off light parts of the object.
+A single global value for $T$ failed for images where shadows are as dark as the object, as with the shadows on images 02 and 03, and with the entirety of image 05.
+
+\section{Discussion and Failure Analysis}
+
+\subsection{Results}
+
+The key failure affecting every one of our images is straight jump lines: each trajectory has one or more long lines transecting the shape, as shown in Fig.~\ref{fig:pear}.
+We found the cause to be the 2-pixel-wide edge.
+The nearest-neighbour path traverses the shape using one layer, then has to abruptly jump across the shape to collect the leftover pixels from the other layer.
+The Fourier step treats that jump as part of the outline, so the line appears in every reconstruction (Fig.~\ref{fig:final}).
+Separately, per-image results varied:
+
+\begin{itemize}
+  \item 00 (trainer): a clear, discernible outline, though only with $\sigma=5$ and $T=232$.
+  \item 01 (mug): the handle has a hole, so there are both inner and outer outlines.
+    The path must jump between the inner and outer outlines.
+  \item 02 (apple), 03 (banana): the shadows cast beneath them are included in the silhouettes (Fig.~\ref{fig:apple}).
+  \item 04 (pear): the clearest mask since there is no shadow included in the silhouette.
+  \item 05 (puppy): unrecognisable failure.
+    The grey background is approximately as dark as the dog, and its white fur is even brighter, meaning no outline can be found (Fig.~\ref{fig:puppy}).
+\end{itemize}
+
+At 5\% of the harmonics, every shape is a coarse, vague blob.
+Most shapes are recognisable at $\sim$30\% and fine-grained at higher percentages.
+
+\begin{figure}
+  \centerline{\includegraphics[width=\columnwidth]{04_trajectory.png}}
+  \caption{Trajectory of image 04 (depicting a pear) traced from 10\% to 100\%.}
+  \label{fig:pear}
+\end{figure}
+
+\begin{figure}
+  \centerline{\includegraphics[width=\columnwidth]{02_transforms.png}}
+  \caption{Pipeline stages for image 02 (apple). The cast shadow is included in the mask.}
+  \label{fig:apple}
+\end{figure}
+
+\begin{figure}
+  \centerline{\includegraphics[width=\columnwidth]{05_transforms.png}}
+  \caption{Pipeline stages for image 05 (puppy). The grey background is classified as foreground.}
+  \label{fig:puppy}
+\end{figure}
+
+\subsection{Improvements}
+In our code, when an object pixel neighbours a background pixel, both are marked as an edge, giving two rows of edge pixels (one inside the object and one outside it).
+Marking only the foreground pixel at each transition would give a 1-pixel-wide boundary, which would remove the leftover layer causing the jump lines.
+
+The mug (image 01) has two outlines, outside and around the handle hole; epicycles can only draw one continuous line, so the line jumps between outlines.
+We would fix this either by keeping only the outer outline, or by drawing each outline with its own epicycles.
+
+To alleviate the shadow issue for images 02 and 03, and to separate the puppy from the background, we would use colour instead of just using brightness: shadows are grey while the fruit is vibrant, and the puppy is ginger while the ground is beige.
+
+Instead of hand-tuning $T$ per image where the default fails, we would derive the best value for $T$ automatically using Otsu's method~\cite{otsu}, which chooses the cutoff that best splits the image into two groups: dark (object) and light (background).
 
 \printbibliography
 

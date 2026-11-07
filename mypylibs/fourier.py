@@ -36,6 +36,7 @@ def save_reconstruction_mosaic(x, y, output_path):
         ax.plot(path.real, path.imag, color="navy", linewidth=0.8)
         ax.set_title(f"{percentage}% of harmonics")
         ax.set_aspect("equal")
+        ax.invert_yaxis()  # image rows grow downwards
         ax.axis("off")
 
     fig.tight_layout()
