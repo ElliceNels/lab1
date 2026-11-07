@@ -40,7 +40,7 @@
 \maketitle
 
 \begin{abstract}
-We present a multi-stage pipeline that turns six single-subject images into silhouette outlines and redraws them with Fourier epicycles. The pipeline has four main steps: greyscaling, blurring, thresholding, and edge-detection. We then order the edge pixels into a path. We use the DFT and keep the largest harmonics. Shapes are somewhat recognisable at $\sim$30\% of harmonics, but every trajectory has jump lines attributable to 2-pixel edges. Shadows and grey-ish backgrounds also cause failures. We conclude with our learnings: thresholding with brightness alone is insufficient, and accounting for colour and automatic thresholds would help.
+We present a multi-stage pipeline that turns six single-subject images into silhouette outlines and redraws them with Fourier epicycles. The pipeline has four main steps: greyscaling, blurring, thresholding, and edge detection. We then order the edge pixels into a path. We use the DFT and keep the largest harmonics. Shapes are somewhat recognisable at $\sim$30\% of harmonics, but every trajectory has jump lines attributable to 2-pixel edges. Shadows and grey-ish backgrounds also cause failures. We conclude with our learnings: thresholding with brightness alone is insufficient, and accounting for colour and automatic thresholds would help.
 \end{abstract}
 
 \section{Methodology}
@@ -54,7 +54,7 @@ Our image processing pipeline processes each image in turn. We convert the image
 Y' = 0.299R' + 0.587G' + 0.114B'
 \end{equation}
 
-We use Gaussian blur to remove texture and noise before thresholding \eqref{eq:gaussian}. The kernel is built by hand and applied by convolution with reflected borders. Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim$99.7\% of the Gaussian's weight. The per-image YAML can optionally override the default $\sigma=2$.
+We use Gaussian blur \eqref{eq:gaussian} to remove texture and noise before thresholding. The kernel is built by hand and applied by convolution with reflected borders. Its radius is $\lceil 3\sigma \rceil$ pixels, covering $\sim$99.7\% of the Gaussian's weight. The per-image YAML can optionally override the default $\sigma=2$.
 \begin{equation}
 G(x,y) = \frac{1}{W}\exp\!\left(-\frac{x^2+y^2}{2\sigma^2}\right),
 \quad |x|,|y| \le \lceil 3\sigma \rceil
@@ -62,7 +62,7 @@ G(x,y) = \frac{1}{W}\exp\!\left(-\frac{x^2+y^2}{2\sigma^2}\right),
 \end{equation}
 where $W$ is the sum of all kernel values, so the kernel sums to 1 and blurring does not change the image's overall brightness.
 
-After this, we threshold the blurred greyscale image. Pixels darker than $T$ become foreground (value 1) and the rest background (value 0), with $T$ defaulting to $240$—overrideable by the image's corresponding YAML file. Edge detection runs on the threshold mask: a pixel is marked as an edge if its value differs from the next pixel horizontally or vertically, leaving a 2-pixel-wide outline of the silhouette. Fig.~\ref{fig:transforms} shows each stage for image 00 (trainer).
+After this, we threshold the blurred greyscale image. Pixels darker than $T$ become foreground (value 1) and the rest background (value 0), with $T$ defaulting to $240$—overridable by the image's corresponding YAML file. Edge detection runs on the threshold mask: a pixel is marked as an edge if its value differs from the next pixel horizontally or vertically, leaving a 2-pixel-wide outline of the silhouette. Fig.~\ref{fig:transforms} shows each stage for image 00 (trainer).
 
 \begin{figure}
 \centerline{\includegraphics[width=\columnwidth]{00_transforms.png}}
@@ -80,7 +80,7 @@ c_k = \frac{1}{N}\sum_{n=0}^{N-1} z[n]\, e^{-2\pi i k n / N}
 \end{equation}
 where $N = 500$ and each $c_k$ is a circle (epicycle) that spins $k$ times per lap.
 
-For each epicycle, its direction is the sign of $k$. We sort by size and keep the biggest $K$, for 5\% to 100\% in steps of 5\%. This gives the 20 panels shown in Fig.~\ref{fig:final}. We add the circles that we kept back together in order to draw the outline. The shape is vaguely recognisable at 5\% but matches the resampled trajectory exactly at 100\%. For each image, we use Matplotlib's animation tools (\texttt{FuncAnimation}, \texttt{FFMpegWriter}) to create and save an MP4 animating the 40 largest epicycles drawing the outline.
+For each epicycle, its direction is the sign of $k$. We sort by size and keep the biggest $K$, for 5\% to 100\% in steps of 5\%. This gives the 20 panels shown in Fig.~\ref{fig:final}. We then add the selected circles back together to draw the outline. The shape is vaguely recognisable at 5\% but matches the resampled trajectory exactly at 100\%. For each image, we use Matplotlib's animation tools (\texttt{FuncAnimation}, \texttt{FFMpegWriter}) to create and save an MP4 animating the 40 largest epicycles drawing the outline.
 
 \begin{figure}
 \centerline{\includegraphics[width=\columnwidth]{00_final.png}}
@@ -91,7 +91,7 @@ For each epicycle, its direction is the sign of $k$. We sort by size and keep th
 \section{Justifications}
 
 \subsection{Spatial Filters and Kernels}
-We apply a blur filter to each image for background attenuation: to minimise background noise and texture before thresholding. We use the Gaussian blur technique since it gives more weight to nearby pixels than far ones, which dims background noise but keeps the outline sharper than a simple average, which is better for our case. From brief trial-and-error, we settled on a default of $\sigma=2$ as this was the minimum value that highlighted one clear subject for most of the images. Image 00 required $\sigma=5$ and image 04 required $\sigma=6$, since, otherwise, those images broke into separate pieces (at $\sigma=2$, 866 and 5 pieces respectively). We use the smallest value we could since higher values for $\sigma$ meant more blur and thus less-detailed, rounded corners.
+We apply a blur filter to each image for background attenuation: to minimise background noise and texture before thresholding. We use the Gaussian blur technique since it gives more weight to nearby pixels than far ones, which dims background noise but keeps the outline sharper than a simple average. Through brief trial and error, we settled on a default of $\sigma=2$ as this was the minimum value that highlighted one clear subject for most of the images. Image 00 required $\sigma=5$ and image 04 required $\sigma=6$, since, otherwise, those images broke into separate pieces (at $\sigma=2$, 866 and 5 pieces respectively). We use the smallest value we could since higher values for $\sigma$ meant more blur and thus less-detailed, rounded corners.
 
 As mentioned in Section~\ref{sec:pipeline}, we use $\lceil3\sigma\rceil$ for the kernel radius since this covers $\sim99.7\%$ of the bell curve, which is sufficient. Accounting for more of the curve would add unnecessary computation for little gain.
 
@@ -105,20 +105,20 @@ M(x,y) = \begin{cases} 1 & \text{if } I(x,y) < T \\ 0 & \text{otherwise} \end{ca
 \end{equation}
 where $I$ is the blurred image and $M$ is the mask.
 
-From trial-and-error, we chose a default $T=240$ since most image backgrounds are white or near-white. For image 00, we dropped to $T=232$ because at 240 its off-white background leaked into the mask. For image 04, we found we needed $T=200$ and $\sigma=6$ together to remove the stock-photo watermark sufficiently. A lower value for $T$, however, runs the risk of cutting off light parts of the object. A single global value for $T$ failed for images where shadows are as dark as the object, as with the shadows on images 02 and 03, and with the entirety of image 05.
+Through trial and error, we chose a default $T=240$ since most image backgrounds are white or near-white. For image 00, we dropped to $T=232$ because at 240 its off-white background leaked into the mask. For image 04, we found we needed $T=200$ and $\sigma=6$ together to remove the stock-photo watermark sufficiently. A lower value for $T$, however, runs the risk of cutting off light parts of the object. A single global value for $T$ failed for images where shadows are as dark as the object, as with the shadows on images 02 and 03, and with the entirety of image 05.
 
 \section{Discussion and Failure Analysis}
 
 \subsection{Results}
 
-The key failure affecting every one of our images is straight jump lines: each trajectory has one or more long lines transecting the shape, as shown in Fig.~\ref{fig:pear}. We found the cause to be the 2-pixel wide edge. The nearest-neighbour path traverses the shape using one layer, then has to abruptly jump across the shape to collect the leftover pixels from the other layer. The Fourier step treats that jump as part of the outline, so the line appears in every reconstruction (Fig.~\ref{fig:final}). Separately, per-image results varied:
+The key failure affecting every one of our images is straight jump lines: each trajectory has one or more long lines transecting the shape, as shown in Fig.~\ref{fig:pear}. We found the cause to be the 2-pixel-wide edge. The nearest-neighbour path traverses the shape using one layer, then has to abruptly jump across the shape to collect the leftover pixels from the other layer. The Fourier step treats that jump as part of the outline, so the line appears in every reconstruction (Fig.~\ref{fig:final}). Separately, per-image results varied:
 
 \begin{itemize}
     \item 00 (trainer): a clear, discernible outline, though only with $\sigma=5$ and $T=232$.
-    \item 01 (mug): the handle has a hole, so there is both an inner and outer outline. The path must jump between the inner and outer outlines.
-    \item 02 (apple), 03 (banana): bottom cast shadows are included in the silhouettes.
+    \item 01 (mug): the handle has a hole, so there are both inner and outer outlines. The path must jump between the inner and outer outlines.
+    \item 02 (apple), 03 (banana): the shadows cast beneath them are included in the silhouettes (Fig.~\ref{fig:apple}).
     \item 04 (pear): the clearest mask since there is no shadow included in the silhouette.
-    \item 05 (puppy): unrecognisable failure. The grey background is approximately as dark as the dog, and its white fur is even brighter, meaning no outline can be found.
+    \item 05 (puppy): unrecognisable failure. The grey background is approximately as dark as the dog, and its white fur is even brighter, meaning no outline can be found (Fig.~\ref{fig:puppy}).
 \end{itemize}
 
 At 5\% of the harmonics, every shape is a coarse, vague blob. Most shapes are recognisable at $\sim$30\% and fine-grained at higher percentages.
@@ -127,6 +127,18 @@ At 5\% of the harmonics, every shape is a coarse, vague blob. Most shapes are re
 \centerline{\includegraphics[width=\columnwidth]{04_trajectory.png}}
 \caption{Trajectory of image 04 (depicting a pear) traced from 10\% to 100\%.}
 \label{fig:pear}
+\end{figure}
+
+\begin{figure}
+\centerline{\includegraphics[width=\columnwidth]{02_transforms.png}}
+\caption{Pipeline stages for image 02 (apple). The cast shadow is included in the mask.}
+\label{fig:apple}
+\end{figure}
+
+\begin{figure}
+\centerline{\includegraphics[width=\columnwidth]{05_transforms.png}}
+\caption{Pipeline stages for image 05 (puppy). The grey background is classified as foreground.}
+\label{fig:puppy}
 \end{figure}
 
 \subsection{Improvements}
