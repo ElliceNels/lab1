@@ -188,7 +188,7 @@ In our code, when an object pixel neighbours a background pixel, both are marked
 Marking only the foreground pixel at each transition would give a 1-pixel-wide boundary, which would remove the leftover layer causing the jump lines.
 
 The mug (image 01) has two outlines, outside and around the handle hole; epicycles can only draw one continuous line, so the line jumps between outlines.
-We would fix this by either 1) keeping only the outer outline, or 2) drawing each outline with its own epicycles.
+We would fix this either by keeping only the outer outline, or by drawing each outline with its own epicycles.
 
 To alleviate the shadow issue for images 02 and 03, and to separate the puppy from the background, we would use colour instead of just using brightness: shadows are grey while the fruit is vibrant, and the puppy is ginger while the ground is beige.
 
