@@ -91,12 +91,18 @@ For each epicycle, its direction is the sign of $k$. We sort by size and keep th
 \section{Justifications}
 
 \subsection{Spatial Filters and Kernels}
-\todo{Why these kernels and sizes? What did you try and reject?}
+We apply a blur filter to each image for background attenuation: to minimize background noise and texture before thresholding. We use the Gaussian blur technique since it gives more weight to nearby pixels than far ones, which dims background noise but keeps the outline sharper than a simple average, which is better for our case. From brief trial-and-error, we settled on a default of $\sigma=2$ as this was the minimum value that highlighted one clear subject for most of the images. Image 00 required $\sigma=5$ and image 04 required $\sigma=6$, since, otherwise, those images broke into separate pieces (at $\sigma=2$, 866 and 5 pieces respectively). We use the smallest value we could since higher values for $\sigma$ meant more blur and thus less-detailed, rounded corners.
+
+As mentioned in Section~\ref{sec:pipeline}, we use $\lceil3\sigma\rceil$ for the kernel radius since this covers $\sim99.7\%$ of the bell curve, which is sufficient. Accounting for more of the curve would add unnecessary computation for little gain.
+
+After thresholding, we run edge detection on the resulting mask. We use a $[-1, 1]$ difference kernel since said mask only contains black and white pixels, meaning any change between neighbouring pixels is an edge; a more complex edge filter (e.g., Sobel) is therefore unneeded.
 
 \subsection{Thresholding}
 \todo{How were thresholds chosen? Which images needed their own values, and why?}
 
 \section{Discussion and Failure Analysis}
+
+\todo{Mention dog -> The puppy is about as bright as the ground, and its white fur is even brighter. No single T separates them}
 
 \subsection{Results}
 \todo{Where the pipeline succeeded or failed, per image, with figures from \texttt{out/}.}
