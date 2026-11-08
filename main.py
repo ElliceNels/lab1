@@ -43,7 +43,7 @@ def main(case: int):
     threshold_value = params.get("threshold", 240)
     mask = thresholding.calculate(blurred, threshold=threshold_value)
 
-    # 4. Extract the boundary of the thresholded silhouette
+    # 4. Extract the boundary of the thresholded silhouette using a 4 neighbour laplacian filter
     edges = edge_detection.calculate(mask)
 
     # Save the original plus the four stages: (title, image, display maximum)
@@ -52,7 +52,7 @@ def main(case: int):
         ("1. Grayscale", gray, 255),
         (f"2. Gaussian blur (sigma={sigma:.1f})", blurred, 255),
         (f"3. Threshold mask (T={threshold_value:.1f})", mask, 1),
-        ("4. Edge detection", edges, 1),
+        ("4. Laplacian border (1px)", edges, 1),
     ]
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
     for ax in axes.flat:
