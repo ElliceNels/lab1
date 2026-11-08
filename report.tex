@@ -73,7 +73,9 @@ where $W$ is the sum of all kernel values, so the kernel sums to 1 and blurring 
 
 After this, we threshold the blurred greyscale image.
 Pixels darker than $T$ become foreground (value 1) and the rest background (value 0), with $T$ defaulting to $240$—overridable by the image's corresponding YAML file.
-Edge detection runs on the threshold mask: a pixel is marked as an edge if its value differs from the next pixel horizontally or vertically, leaving a 2-pixel-wide outline of the silhouette.
+Edge detection runs on the threshold mask by convolving it with the 4-neighbour Laplacian kernel
+\[ \begin{bmatrix} 0 & 1 & 0 \\ 1 & -4 & 1 \\ 0 & 1 & 0 \end{bmatrix}, \]
+treating pixels outside the image as background. A foreground pixel gets a negative response only when at least one of its four neighbours is background, so keeping just the foreground pixels with a negative response gives a 1-pixel-wide outline lying on the inside edge of the silhouette. The previous method produced a 2-pixel-wide outline, and when it was ordered into a trajectory, the path jumped between the two parallel rings of edge pixels, which appeared as straight lines crossing the image.
 Fig.~\ref{fig:transforms} shows each stage for image 00 (trainer).
 
 \begin{figure}
