@@ -1,4 +1,4 @@
-# CS6524 Lab 1 — Team
+# CS6524 Lab 1 — Team 1
 
 ## Team Members
 
